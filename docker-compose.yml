@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: loan-underwriting-db
+    environment:
+      POSTGRES_USER: loan_user
+      POSTGRES_PASSWORD: loan_pass
+      POSTGRES_DB: loan_underwriting
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: loan-underwriting-api
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: loan_user
+      DB_PASSWORD: loan_pass
+      DB_NAME: loan_underwriting
+      AI_PROVIDER: gemini
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    ports:
+      - "8001:8000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/app
+      - ./backend/pdfs:/app/pdfs
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: loan-underwriting-ui
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
