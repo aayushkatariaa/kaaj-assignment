@@ -498,7 +498,3 @@ For questions or issues:
 - Check [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for feature details
 - Review [DECISIONS.md](DECISIONS.md) for architecture decisions
 - Open an issue on GitHub
-
-## License
-
-Proprietary - Internal Use Only
