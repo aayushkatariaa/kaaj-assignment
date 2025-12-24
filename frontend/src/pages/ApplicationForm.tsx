@@ -5,6 +5,27 @@ import { applicationsApi } from '../services/api'
 import { useForm } from 'react-hook-form'
 import { Upload, AlertCircle, Loader2, XCircle } from 'lucide-react'
 
+// US States for dropdown
+const US_STATES = [
+  { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' }, { code: 'AZ', name: 'Arizona' },
+  { code: 'AR', name: 'Arkansas' }, { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },
+  { code: 'CT', name: 'Connecticut' }, { code: 'DE', name: 'Delaware' }, { code: 'FL', name: 'Florida' },
+  { code: 'GA', name: 'Georgia' }, { code: 'HI', name: 'Hawaii' }, { code: 'ID', name: 'Idaho' },
+  { code: 'IL', name: 'Illinois' }, { code: 'IN', name: 'Indiana' }, { code: 'IA', name: 'Iowa' },
+  { code: 'KS', name: 'Kansas' }, { code: 'KY', name: 'Kentucky' }, { code: 'LA', name: 'Louisiana' },
+  { code: 'ME', name: 'Maine' }, { code: 'MD', name: 'Maryland' }, { code: 'MA', name: 'Massachusetts' },
+  { code: 'MI', name: 'Michigan' }, { code: 'MN', name: 'Minnesota' }, { code: 'MS', name: 'Mississippi' },
+  { code: 'MO', name: 'Missouri' }, { code: 'MT', name: 'Montana' }, { code: 'NE', name: 'Nebraska' },
+  { code: 'NV', name: 'Nevada' }, { code: 'NH', name: 'New Hampshire' }, { code: 'NJ', name: 'New Jersey' },
+  { code: 'NM', name: 'New Mexico' }, { code: 'NY', name: 'New York' }, { code: 'NC', name: 'North Carolina' },
+  { code: 'ND', name: 'North Dakota' }, { code: 'OH', name: 'Ohio' }, { code: 'OK', name: 'Oklahoma' },
+  { code: 'OR', name: 'Oregon' }, { code: 'PA', name: 'Pennsylvania' }, { code: 'RI', name: 'Rhode Island' },
+  { code: 'SC', name: 'South Carolina' }, { code: 'SD', name: 'South Dakota' }, { code: 'TN', name: 'Tennessee' },
+  { code: 'TX', name: 'Texas' }, { code: 'UT', name: 'Utah' }, { code: 'VT', name: 'Vermont' },
+  { code: 'VA', name: 'Virginia' }, { code: 'WA', name: 'Washington' }, { code: 'WV', name: 'West Virginia' },
+  { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' }, { code: 'DC', name: 'Washington DC' }
+]
+
 // Helper to extract error message from API response
 function getErrorMessages(error: any): string[] {
   const detail = error.response?.data?.detail
@@ -106,55 +127,36 @@ export default function ApplicationForm() {
     <div className="max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">New Loan Application</h1>
 
-      {/* PDF Upload Option */}
-      <div className="bg-blue-50 rounded-lg shadow-sm border border-blue-200 p-6 mb-6">
+      {/* PDF Upload Option - Disabled */}
+      <div className="bg-gray-100 rounded-lg shadow-sm border border-gray-300 p-6 mb-6 opacity-60">
         <div className="flex items-start space-x-3">
-          <Upload className="text-blue-600 mt-1" size={24} />
+          <Upload className="text-gray-400 mt-1" size={24} />
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-blue-900 mb-2">Upload PDF Application</h2>
-            <p className="text-sm text-blue-700 mb-4">
-              Upload a PDF loan application and we'll automatically extract the information using AI.
+            <h2 className="text-lg font-semibold text-gray-600 mb-2">Upload PDF Application (Coming Soon)</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              PDF upload feature is temporarily disabled. Please use the manual form below.
             </p>
             <div className="flex items-center space-x-3">
               <input
                 type="file"
                 accept=".pdf"
                 onChange={handlePdfUpload}
-                disabled={isLoading}
-                className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none disabled:opacity-50"
+                disabled={true}
+                className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg cursor-not-allowed bg-gray-200 focus:outline-none disabled:opacity-50"
               />
-              {pdfFile && (
-                <button
-                  onClick={submitPdf}
-                  disabled={isLoading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
-                >
-                  {uploadMutation.isPending ? (
-                    <>
-                      <Loader2 className="animate-spin" size={18} />
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <span>Process PDF</span>
-                  )}
-                </button>
-              )}
+              <button
+                disabled={true}
+                className="px-4 py-2 bg-gray-400 text-white rounded-md cursor-not-allowed opacity-50"
+              >
+                <span>Disabled</span>
+              </button>
             </div>
-            {uploadError && (
-              <div className="mt-2 flex items-center space-x-2 text-red-600">
-                <AlertCircle size={16} />
-                <span className="text-sm">{uploadError}</span>
-              </div>
-            )}
-            {pdfFile && !uploadError && (
-              <p className="mt-2 text-sm text-green-600">✓ {pdfFile.name} ready to process</p>
-            )}
           </div>
         </div>
       </div>
 
       <div className="text-center mb-4">
-        <span className="text-gray-500">— OR —</span>
+        <span className="text-gray-500">Manual Entry</span>
       </div>
 
       {/* Display create errors */}
@@ -188,8 +190,14 @@ export default function ApplicationForm() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">State *</label>
-                  <input {...register('state', { required: true, maxLength: 2 })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="CA" />
+                  <select {...register('state', { required: true })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Select State</option>
+                    {US_STATES.map(s => (
+                      <option key={s.code} value={s.code}>{s.name} ({s.code})</option>
+                    ))}
+                  </select>
+                  {errors.state && <span className="text-red-500 text-sm">Required</span>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">City</label>
@@ -205,14 +213,21 @@ export default function ApplicationForm() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Years in Business</label>
-                  <input {...register('years_in_business')} type="number" step="0.1"
+                  <input {...register('years_in_business', { 
+                    min: { value: 0, message: 'Must be 0 or greater' },
+                    max: { value: 100, message: 'Must be 100 or less' }
+                  })} type="number" step="0.1" min="0" max="100"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                  {errors.years_in_business && <span className="text-red-500 text-sm">{errors.years_in_business.message as string}</span>}
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Annual Revenue</label>
-                <input {...register('annual_revenue')} type="number"
+                <input {...register('annual_revenue', {
+                  min: { value: 0, message: 'Must be 0 or greater' }
+                })} type="number" min="0"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="500000" />
+                {errors.annual_revenue && <span className="text-red-500 text-sm">{errors.annual_revenue.message as string}</span>}
               </div>
             </div>
           )}
@@ -223,24 +238,37 @@ export default function ApplicationForm() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">First Name *</label>
-                  <input {...register('first_name', { required: true })}
+                  <input {...register('first_name', { required: 'First name is required' })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                  {errors.first_name && <span className="text-red-500 text-sm">{errors.first_name.message as string}</span>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Last Name *</label>
-                  <input {...register('last_name', { required: true })}
+                  <input {...register('last_name', { required: 'Last name is required' })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                  {errors.last_name && <span className="text-red-500 text-sm">{errors.last_name.message as string}</span>}
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>
-                <input {...register('email')} type="email"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                <input {...register('email', {
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: 'Invalid email address'
+                  }
+                })} type="email"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="john@example.com" />
+                {errors.email && <span className="text-red-500 text-sm">{errors.email.message as string}</span>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">FICO Score *</label>
-                <input {...register('fico_score', { required: true })} type="number"
+                <input {...register('fico_score', { 
+                  required: 'FICO score is required',
+                  min: { value: 300, message: 'FICO score must be at least 300' },
+                  max: { value: 850, message: 'FICO score must be at most 850' }
+                })} type="number" min="300" max="850"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="680" />
+                {errors.fico_score && <span className="text-red-500 text-sm">{errors.fico_score.message as string}</span>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Has Bankruptcy?</label>
@@ -263,8 +291,13 @@ export default function ApplicationForm() {
               <h2 className="text-lg font-semibold">Loan Request</h2>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Requested Amount *</label>
-                <input {...register('requested_amount', { required: true })} type="number"
+                <input {...register('requested_amount', { 
+                  required: 'Requested amount is required',
+                  min: { value: 1000, message: 'Minimum loan amount is $1,000' },
+                  max: { value: 10000000, message: 'Maximum loan amount is $10,000,000' }
+                })} type="number" min="1000" max="10000000"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="100000" />
+                {errors.requested_amount && <span className="text-red-500 text-sm">{errors.requested_amount.message as string}</span>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Equipment Type</label>
@@ -274,13 +307,21 @@ export default function ApplicationForm() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Equipment Year</label>
-                  <input {...register('equipment_year')} type="number"
+                  <input {...register('equipment_year', {
+                    min: { value: 1990, message: 'Year must be 1990 or later' },
+                    max: { value: new Date().getFullYear() + 1, message: `Year cannot exceed ${new Date().getFullYear() + 1}` }
+                  })} type="number" min="1990" max={new Date().getFullYear() + 1}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="2020" />
+                  {errors.equipment_year && <span className="text-red-500 text-sm">{errors.equipment_year.message as string}</span>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Term (months)</label>
-                  <input {...register('term_months')} type="number"
+                  <input {...register('term_months', {
+                    min: { value: 12, message: 'Minimum term is 12 months' },
+                    max: { value: 84, message: 'Maximum term is 84 months' }
+                  })} type="number" min="12" max="84"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="60" />
+                  {errors.term_months && <span className="text-red-500 text-sm">{errors.term_months.message as string}</span>}
                 </div>
               </div>
             </div>
