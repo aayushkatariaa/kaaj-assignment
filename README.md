@@ -1,4 +1,4 @@
-# Loan Underwriting & Lender Matching System
+# Kaaj.ai Loan Underwriting & Lender Matching System
 
 A comprehensive system for evaluating business loan applications against multiple lenders' credit policies. Built with extensibility in mind, making it easy to add new lenders, modify criteria, and customize the matching logic.
 
