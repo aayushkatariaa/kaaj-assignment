@@ -4,7 +4,7 @@
 
 ### Prerequisites
 - Docker and Docker Compose
-- OpenAI API Key (required for PDF parsing)
+- OpenAI or Gemini (preferred) API Key (required for PDF parsing)
 
 ### Setup Steps
 
@@ -13,11 +13,14 @@
    cp .env.example .env
    ```
 
-2. **Add your OpenAI API Key**
-   Edit `.env` and add your OpenAI API key:
+2. **Add your llm API Key**
+   Edit `.env` and add your API key:
    ```
    OPENAI_API_KEY=sk-your-actual-key-here
+   GEMINI_API_KEY=gemini-key-here
    ```
+   Also add your provider for the same accordingly
+   AI_PROVIDER=gemini in our case
 
 3. **Start the services**
    ```bash
@@ -117,10 +120,12 @@ docker-compose up -d
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| OPENAI_API_KEY | Yes* | - | OpenAI API key for PDF parsing |
+| OPENAI_API_KEY | No | - | OpenAI API key for PDF parsing |
+| GEMINI_API_KEY | Yes* | - | Gemini API key for PDF parsing |
+| AI_PROVIDER='gemini' or 'openai' | Yes | - | Provider selection to be used |
 | DB_HOST | No | localhost | PostgreSQL host |
 | DB_USER | No | loan_user | Database user |
 | DB_PASSWORD | No | loan_pass | Database password |
-| HATCHET_CLIENT_TOKEN | No | - | Hatchet workflow token (optional) |
+| HATCHET_CLIENT_TOKEN | Yes | - | Hatchet workflow token |
 
 *Required only if using PDF upload feature

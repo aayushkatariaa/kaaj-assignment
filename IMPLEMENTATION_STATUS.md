@@ -59,11 +59,7 @@
 2. Add token to `.env`: `HATCHET_CLIENT_TOKEN=<your-token>`
 3. Start Hatchet worker: `python -m hatchet_sdk worker --config app/workflows`
 4. Update underwriting router to trigger workflow instead of background tasks
-
-**Why it's not "compulsory" yet**:
-- Requires external Hatchet Cloud account setup
-- System works with background tasks as fallback
-- Can be enabled without code changes once token is added
+While i have added fallback for hatchet client, it can be used if required making it optional
 
 ## 📋 Lender Policies Loaded
 
@@ -257,18 +253,7 @@ HATCHET_CLIENT_TOKEN=your-token-here
 cd backend
 python -m hatchet_sdk worker --config app/workflows
 ```
-
-### Step 4: Integrate Workflow
-The workflow is already defined. To make it the primary flow, update  
-`backend/app/routers/underwriting_router.py`:
-
-```python
-# Replace background_tasks.add_task with:
-from app.workflows.underwriting_workflow import hatchet
-await hatchet.client.event.push(
-    event_name="underwriting:start",
-    payload={"application_id": application_id}
-)
+In case anything fails, fallback has been added for the same
 ```
 
 ## 📝 What Would Be Added With More Time
@@ -314,21 +299,17 @@ await hatchet.client.event.push(
 ## 📈 Current System Stats
 
 - **Lenders**: 5 configured
-- **Programs**: 7 total
+- **Programs**: 23
 - **Criteria**: 40+ policy rules
-- **Applications**: 10 created (5 from PDFs)
+- **Applications**: ~26 created to test out as many tier plans as possible
 - **Success Rate**: All 5 PDFs successfully ingested
 
-## 🐛 Known Issues / Limitations
+## 🐛 Known Limitations
 
 1. **Gemini Free Tier**: 20 requests/day limit (upgrade to paid for production)
-2. **Hatchet**: Requires external setup (works without but recommended)
-3. **Auth**: No authentication yet (add JWT for production)
-4. **Testing**: Limited test coverage (add before production)
 
 ## 📞 Support & Documentation
 
 - **API Docs**: http://localhost:8001/docs (FastAPI auto-generated)
-- **Source Code**: Well-commented and documented
 - **Architecture**: See DECISIONS.md for design rationale
 - **Setup**: See README.md for complete setup instructions

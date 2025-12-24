@@ -4,7 +4,7 @@ A comprehensive system for evaluating business loan applications against multipl
 
 ## 🎯 Features
 
-- **Multi-AI PDF Processing**: Extract loan application data from PDFs using OpenAI GPT-4o or Gemini 1.5 Flash
+- **Multi-AI PDF Processing**: Extract loan application data from PDFs using OpenAI GPT-4o or Gemini 3 flash preview
 - **Intelligent Matching Engine**: Evaluate applications against lender criteria with detailed pass/fail reasons
 - **Extensible Policy System**: 15+ criteria types with easy additions via method-based pattern
 - **Complete REST APIs**: Full CRUD for applications, lenders, programs, and criteria

@@ -33,7 +33,7 @@ GEMINI_API_KEY=your-gemini-key-here
 
 The `PDFParserService` class accepts a `provider` parameter:
 - When `AI_PROVIDER=openai`, it uses GPT-4o for extraction
-- When `AI_PROVIDER=gemini`, it uses Gemini 1.5 Flash for extraction
+- When `AI_PROVIDER=gemini`, it uses Gemini 3 flash preview for extraction, currently best working openai key is paid
 
 Both providers:
 - Extract text from PDFs using PyPDF2

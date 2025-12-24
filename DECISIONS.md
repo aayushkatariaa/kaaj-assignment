@@ -47,11 +47,7 @@ Use PostgreSQL with JSONB support for storing flexible criteria configurations.
 - **Better Concurrency**: MVCC handles concurrent reads better
 - **Advanced Features**: CTEs, window functions for analytics
 - **Async Drivers**: asyncpg provides excellent async performance
-
-### Trade-offs
-- Team may need to adapt to PostgreSQL-specific syntax
-- Different tooling from MySQL ecosystem
-
+- Mentioned in assignment stack :)
 ---
 
 ## ADR-003: Hatchet for Workflow Orchestration
@@ -67,11 +63,6 @@ Use Hatchet SDK for workflow orchestration instead of Celery or custom queues.
 - **Observability**: Dashboard for monitoring workflow runs
 - **Step Dependencies**: Natural DAG representation
 - **Concurrency Control**: Built-in rate limiting and concurrency limits
-
-### Trade-offs
-- External dependency on Hatchet service
-- Learning curve for team
-- Cost considerations for high-volume usage
 
 ---
 
@@ -116,8 +107,8 @@ match_score = (Σ passed_weight × weight) / (Σ all_weight) × 100
 
 ### Future Enhancements
 - Tiered scoring (e.g., FICO > 720 gets bonus points)
-- Machine learning-based scoring
-- Historical approval rate correlation
+- Machine learning-based scoring if more data was provided could be done with enough time
+- Historical approval rate correlation as per lender history
 
 ---
 
@@ -183,9 +174,7 @@ Single criteria table with multiple nullable value columns:
 
 ### Alternatives Considered
 1. **Separate Tables per Type**: More normalized but complex joins
-2. **Single JSON Column**: Flexible but harder to query/index
-3. **EAV Pattern**: Too complex, poor query performance
-
+2. **Single JSON Column**: Flexible but harder to query/index, didnt want to store json into one column and then manage it manually later very inefficient
 ---
 
 ## ADR-009: Error Handling Strategy
