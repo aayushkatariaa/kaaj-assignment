@@ -37,7 +37,7 @@ def _evaluate_criteria(self, criteria, application):
 ## ADR-002: PostgreSQL over MySQL
 
 ### Context
-The original geo-doc-parser uses MySQL. This system needs to store complex JSON structures (criteria configurations) and support advanced querying.
+Using PostgreSQL as per instructions for kaaj assignment. This system needs to store complex JSON structures (criteria configurations) and support advanced querying.
 
 ### Decision
 Use PostgreSQL with JSONB support for storing flexible criteria configurations.

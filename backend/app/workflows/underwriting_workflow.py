@@ -7,6 +7,12 @@ The workflow handles:
 2. Feature derivation
 3. Parallel lender evaluation
 4. Results aggregation
+
+Retry Strategy:
+- Each step has automatic retry logic configured
+- Critical steps (evaluate_lenders) have 3 retries
+- Standard steps have 2 retries
+- Timeouts range from 30s to 120s based on complexity
 """
 
 from hatchet_sdk import Hatchet, Context
@@ -27,16 +33,24 @@ class UnderwritingWorkflow:
     Main underwriting workflow that orchestrates the evaluation process.
     
     Steps:
-    1. validate_application - Ensures all required data is present
-    2. derive_features - Calculates derived fields (equipment age, etc.)
-    3. evaluate_lenders - Parallel evaluation against all lenders
-    4. aggregate_results - Combines results and determines best matches
+    1. validate_application - Ensures all required data is present (2 retries, 30s timeout)
+    2. derive_features - Calculates derived fields (2 retries, 30s timeout)
+    3. get_active_lenders - Fetches active lender list (2 retries, 30s timeout)
+    4. evaluate_lenders - Parallel evaluation against all lenders (3 retries, 120s timeout)
+    5. finalize_results - Updates application and run status (2 retries, 30s timeout)
+    
+    Retry Behavior:
+    - Automatic retry on transient failures (network, database timeouts, etc.)
+    - Exponential backoff between retries (Hatchet default)
+    - Critical evaluation step has extra retries due to complexity
+    - All retries are logged and visible in Hatchet dashboard
     """
     
     @hatchet.step(name="validate_application", timeout="30s", retries=2)
     async def validate_application(self, context: Context) -> Dict[str, Any]:
         """
         Validate that the application has all required information.
+        Retries: 2 attempts with 30s timeout per attempt.
         """
         input_data = context.workflow_input()
         application_id = input_data.get("application_id")
@@ -100,10 +114,11 @@ class UnderwritingWorkflow:
                 "requested_amount": application.loan_request.requested_amount
             }
     
-    @hatchet.step(name="derive_features", timeout="30s", parents=["validate_application"])
+    @hatchet.step(name="derive_features", timeout="30s", retries=2, parents=["validate_application"])
     async def derive_features(self, context: Context) -> Dict[str, Any]:
         """
         Derive additional features needed for evaluation.
+        Retries: 2 attempts with 30s timeout per attempt.
         """
         validation_result = context.step_output("validate_application")
         application_id = validation_result["application_id"]
@@ -155,10 +170,11 @@ class UnderwritingWorkflow:
                 "equipment_age_years": application.loan_request.equipment_age_years
             }
     
-    @hatchet.step(name="get_active_lenders", timeout="30s", parents=["derive_features"])
+    @hatchet.step(name="get_active_lenders", timeout="30s", retries=2, parents=["derive_features"])
     async def get_active_lenders(self, context: Context) -> Dict[str, Any]:
         """
         Get list of active lenders to evaluate against.
+        Retries: 2 attempts with 30s timeout per attempt.
         """
         features_result = context.step_output("derive_features")
         application_id = features_result["application_id"]
@@ -186,10 +202,11 @@ class UnderwritingWorkflow:
                 "lender_count": len(lender_ids)
             }
     
-    @hatchet.step(name="evaluate_lenders", timeout="120s", parents=["get_active_lenders"], retries=3)
+    @hatchet.step(name="evaluate_lenders", timeout="120s", retries=3, parents=["get_active_lenders"])
     async def evaluate_lenders(self, context: Context) -> Dict[str, Any]:
         """
         Evaluate application against all lenders in parallel.
+        Retries: 3 attempts with 120s timeout per attempt (critical step).
         """
         lenders_result = context.step_output("get_active_lenders")
         application_id = lenders_result["application_id"]
@@ -270,10 +287,11 @@ class UnderwritingWorkflow:
                 "status": "evaluated"
             }
     
-    @hatchet.step(name="finalize_results", timeout="30s", parents=["evaluate_lenders"])
+    @hatchet.step(name="finalize_results", timeout="30s", retries=2, parents=["evaluate_lenders"])
     async def finalize_results(self, context: Context) -> Dict[str, Any]:
         """
         Finalize the underwriting run and update application status.
+        Retries: 2 attempts with 30s timeout per attempt.
         """
         eval_result = context.step_output("evaluate_lenders")
         application_id = eval_result["application_id"]
@@ -331,7 +349,7 @@ async def trigger_underwriting_workflow(application_id: int) -> str:
     Trigger the underwriting workflow for an application.
     Returns the workflow run ID.
     """
-    workflow_run = await hatchet.client.admin.run_workflow(
+    workflow_run = hatchet.client.admin.run_workflow(
         "underwriting-workflow",
         {"application_id": application_id}
     )

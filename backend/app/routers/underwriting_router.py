@@ -1,5 +1,8 @@
 """
 Underwriting API routes - initiates and tracks underwriting runs
+
+Uses Hatchet for workflow orchestration with fallback to BackgroundTasks
+if Hatchet is not configured or unavailable.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
@@ -8,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from datetime import datetime, timezone
 from typing import Optional
+import os
 
 from app.datas.database import get_db
 from app.datas.models import (
@@ -24,6 +28,10 @@ from app.utils.logger_utils import logger
 
 router = APIRouter()
 
+# Check if Hatchet is configured
+HATCHET_ENABLED = bool(os.getenv("HATCHET_CLIENT_TOKEN"))
+logger.info(f"Hatchet configuration: ENABLED={HATCHET_ENABLED}, TOKEN={'SET' if os.getenv('HATCHET_CLIENT_TOKEN') else 'NOT SET'}")
+
 
 @router.post("/{application_id}/run", response_model=UnderwritingRunResponse)
 async def start_underwriting(
@@ -31,7 +39,12 @@ async def start_underwriting(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
-    """Start an underwriting run for an application."""
+    """
+    Start an underwriting run for an application.
+    
+    Uses Hatchet workflow orchestration if configured, otherwise falls back
+    to FastAPI BackgroundTasks for processing.
+    """
     # Get the application
     result = await db.execute(
         select(LoanApplication)
@@ -71,12 +84,28 @@ async def start_underwriting(
     await db.commit()
     await db.refresh(run)
     
-    # Run matching in background
-    background_tasks.add_task(
-        run_matching_process,
-        application_id=application_id,
-        run_id=run.id
-    )
+    if HATCHET_ENABLED:
+        logger.info(f"Attempting to use Hatchet for application {application_id}")
+        try:
+            from app.workflows.underwriting_workflow import trigger_underwriting_workflow
+            workflow_run_id = await trigger_underwriting_workflow(application_id)
+            logger.info(f"✓ Started Hatchet workflow {workflow_run_id} for application {application.reference_id}")
+        except Exception as e:
+            logger.error(f"✗ Hatchet workflow failed, falling back to BackgroundTasks: {e}")
+            background_tasks.add_task(
+                run_matching_process,
+                application_id=application_id,
+                run_id=run.id
+            )
+    else:
+        logger.info(f"Using BackgroundTasks for application {application_id} (Hatchet not configured)")
+        #fallback
+        background_tasks.add_task(
+            run_matching_process,
+            application_id=application_id,
+            run_id=run.id
+        )
+        logger.info(f"Started BackgroundTasks for application {application.reference_id} (Hatchet not configured)")
     
     logger.info(f"Started underwriting run {run.id} for application {application.reference_id}")
     
