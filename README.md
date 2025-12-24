@@ -483,18 +483,3 @@ docker exec loan-underwriting-api python -m app.scripts.seed_lenders
 # Verify in database
 docker exec -it loan-underwriting-postgres psql -U postgres -d loan_underwriting -c "SELECT COUNT(*) FROM lenders;"
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/new-criteria`)
-3. Make changes following code style guidelines
-4. Test thoroughly
-5. Submit pull request
-
-## Support
-
-For questions or issues:
-- Check [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for feature details
-- Review [DECISIONS.md](DECISIONS.md) for architecture decisions
-- Open an issue on GitHub
